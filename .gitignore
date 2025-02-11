@@ -5,6 +5,7 @@
 .target
 .DS_Store
 /target
+.allure/
    
 
 # Log file

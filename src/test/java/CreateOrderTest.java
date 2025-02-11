@@ -8,36 +8,54 @@ import org.junit.runners.Parameterized;
 import modal.CreateOrder;
 import client.ScooterServiceClient;
 
-
 @RunWith(Parameterized.class)
 public class CreateOrderTest {
+
     private final ScooterServiceClient scooterServiceClient = new ScooterServiceClient(BASE_URI);
     private static final String BASE_URI = "https://qa-scooter.praktikum-services.ru/";
-    private final CreateOrder createOrder;
+    private final String color;
 
-    // Параметризованный конструктор
-    public CreateOrderTest(CreateOrder createOrder) {
-        this.createOrder = createOrder;
+    // конструктор
+    public CreateOrderTest(String color) {
+        this.color = color;
     }
 
     // Параметризованные данные для тестов
     @Parameterized.Parameters
-    public static Object[][] getTestData() {
-        return new Object[][]{
-                {new CreateOrder("Енгар", "Котик", "ул.Котиков 10", "Комсомольская", "89995001020", 3, "2025-04-12", "У меня лапки", new String[]{"BLACK"})},
-                {new CreateOrder("Изюм", "Шпиц", "ул.Собачек 11", "Комсомольская", "89995001021", 5, "2025-04-14", "Хороший мальчик ждет самокат!", new String[]{"GREY"})},
-                {new CreateOrder("Дарина", "Тимергалина", "ул.Комсомольская 11", "Комсомольская", "89995001023", 7, "2025-04-11", "", new String[]{"BLACK", "GREY"})},
-                {new CreateOrder("Аврора", "Фролова", "ул.Проспект Октября 23", "Спортивная", "89995001025", 3, "2025-04-11", "", new String[]{})}
+    public static Object[] getTestData() {
+        return new Object[]{
+                "BLACK",
+                "GREY",
+                "BLACK,GREY",
+                ""
         };
     }
 
     @Test
     @DisplayName("Создание заказа")
-    @Description("Проверка создания заказа с различными данными")
-    public void createOrder_ok() {
+    @Description("Проверка создания заказа с различными цветами")
+    public void createOrderSucsefull() {
+        // Создаём объект заказа внутри теста, передавая только цвет
+        CreateOrder createOrder = new CreateOrder(
+                "Уард",
+                "Тест",
+                "Москва",
+                "Комсомольская",
+                "89995001021",
+                3, // Количество дней
+                "2025-04-15", // Дата доставки
+                "Комментарий",
+                color.isEmpty() ? null : color.split(",") // Преобразуем строку цвета в массив
+        );
+
         ValidatableResponse response = scooterServiceClient.createOrder(createOrder);
         response.assertThat()
                 .statusCode(201)
-                .body("track", Matchers.notNullValue());
+                .body("track", Matchers.allOf(
+                        Matchers.notNullValue(),
+                        Matchers.instanceOf(Integer.class),
+                        Matchers.greaterThan(0)
+                ));
+
     }
 }
